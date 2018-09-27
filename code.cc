@@ -3,22 +3,30 @@
 void print_mat(const Matrix& a);
 
 FSSH::FSSH(){
-       	x = -1.0;	
+       	//x=0.0;
 	state = 0;
 	K = 1;
 	//while(x>xmin and x<xmax){
-		//Build(x);
-		//CouplingD();
+	
+		//Build();
 		//StateE();
-		Velocity(); //calculates initial and final E and changes momentum 
-		Position();
+		for (int n=-10; n<10; n++){
+			x=n;
+			Build();
+			StateE();
+			cout << "Energy of States at x= " << x << endl << E[0] << "\t" << E[1] << endl;
+
+		}	
+		//CouplingD();
+		//Velocity(); //calculates initial and final E and changes momentum 
+		//Position();
 
 		//cout << "Energy of state is= " << E(state) << "value of x is = " << x << endl; 
 	
 	
 }
 
-void FSSH::Build(double x){
+void FSSH::Build(){
 	//Creating PE Matrix from Tully's Paper for Simple Avoided Crossing
 	Vij = Matrix(2,2);
 	if (x>0) Vij(0,0) = 0.01*(1-exp(-(1.6*x)));
@@ -67,21 +75,21 @@ double FSSH::CouplingD(){
 	return D12; 
 }
 
-Matrix FSSH::StateE(){
-	Eigen::SelfAdjointEigenSolver<Matrix> solver(Vij);
-	E = Matrix(2,1);
-	E = solver.eigenvalues();
-	return E;
+void FSSH::StateE(){
+	E[1] = ((Vij(0,0) + Vij(1,1)) + pow( pow(Vij(0,0)+Vij(1,1),2) + 4*(Vij(0,0)*Vij(1,1)- pow(Vij(0,1), 2)) , 0.5))/2;
+
+	E[0] = ((Vij(0,0) + Vij(1,1)) - pow( pow(Vij(0,0)+Vij(1,1),2) + 4*(Vij(0,0)*Vij(1,1)- pow(Vij(0,1), 2)) , 0.5))/2;
+
 }
 
 double FSSH::Velocity(){
 	initK = K;
-	Build(x);
+	Build();
 	StateE();
-	double Ea = E(state);
-	Build(x+0.1);
+	double Ea = E[state];
+	Build();
 	StateE();
-	double Eb = E(state);
+	double Eb = E[state];
 	cout << "Initial Energy is " << Ea << endl << "Final Energy is " << Eb <<endl;
 	force  = -(Eb - Ea)/0.1;
 	finalK = initK + force*dt;

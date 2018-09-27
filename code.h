@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cmath>
 using namespace std;
+#include <vector>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Eigenvalues>
 #include <eigen3/Eigen/Core>
@@ -22,12 +23,13 @@ class FSSH
 		double xmax=10.0, xmin=-10.0; //boundaries of x
 		
 		//Potential Energy, Wavefunction and Energies of States, dVij = derivative of Vij 
-		Matrix Vij, WF, E, dVij, phi1, phi2;
+		Matrix Vij, dVij;
 		double initE, finalE, force, initK, finalK, initX, finalX; 
 		double D12;
+		double E[2];
 	FSSH();	
-	void Build(double x);
-	Matrix StateE();
+	void Build();
+	void StateE();
 	double Velocity();
 	double CouplingD();
 	double Position();
