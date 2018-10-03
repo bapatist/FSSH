@@ -17,20 +17,20 @@ class FSSH
 		double x; //distance from origin
 		double K; //momentum 
 		int state;
-		double dt=0.1;
+		double dt=1;
 
 		//boundary variables
-		double xmax=10.0, xmin=-10.0; //boundaries of x
+		double xmax=10.1, xmin=-10.1; //boundaries of x
 		
 		//Potential Energy, Wavefunction and Energies of States, dVij = derivative of Vij 
 		Matrix Vij, dVij;
 		double initE, finalE, force, initK, finalK, initX, finalX; 
 		double D12;
-		double E[2];
+		double E[2], dE[2];
 	FSSH();	
 	void Build();
 	void StateE();
-	double Velocity();
+	void Velocity();
 	double CouplingD();
-	double Position();
+	void Position();
 };

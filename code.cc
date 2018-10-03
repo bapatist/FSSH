@@ -3,26 +3,27 @@
 void print_mat(const Matrix& a);
 
 FSSH::FSSH(){
-       	//x=0.0;
+       	x=-10.0;
 	state = 0;
 	K = 1;
-	//while(x>xmin and x<xmax){
+	while(x>xmin and x<xmax){
 	
-		//Build();
-		//StateE();
-		for (int n=-10; n<10; n++){
-			x=n;
+		//for (double n=-10; n<10; n++){
+			
 			Build();
 			StateE();
-			cout << "Energy of States at x= " << x << endl << E[0] << "\t" << E[1] << endl;
+			Position();
+			cout << "Position is at " << x << endl;
+			cout << "K value is " << K << '\n' << endl;
+			//cout << "Energy of States at x= " << x << endl << E[0] << "\t" << E[1] << endl;
+			//cout << "Derivative Energy of States at x= " << x << endl << dE[0] << "\t" << dE[1] << endl;
 
 		}	
-		//CouplingD();
-		//Velocity(); //calculates initial and final E and changes momentum 
-		//Position();
+	//CouplingD();
+	//Velocity(); //calculates initial and final E and changes momentum 
+	//Position();
+	//cout << "Energy of state is= " << E(state) << "value of x is = " << x << endl; 
 
-		//cout << "Energy of state is= " << E(state) << "value of x is = " << x << endl; 
-	
 	
 }
 
@@ -76,33 +77,20 @@ double FSSH::CouplingD(){
 }
 
 void FSSH::StateE(){
-	E[1] = ((Vij(0,0) + Vij(1,1)) + pow( pow(Vij(0,0)+Vij(1,1),2) + 4*(Vij(0,0)*Vij(1,1)- pow(Vij(0,1), 2)) , 0.5))/2;
+	E[1] = ((Vij(0,0) + Vij(1,1)) + pow( pow(Vij(0,0)+Vij(1,1),2) - 4*(Vij(0,0)*Vij(1,1)- pow(Vij(0,1), 2)) , 0.5))/2;
 
-	E[0] = ((Vij(0,0) + Vij(1,1)) - pow( pow(Vij(0,0)+Vij(1,1),2) + 4*(Vij(0,0)*Vij(1,1)- pow(Vij(0,1), 2)) , 0.5))/2;
+	E[0] = ((Vij(0,0) + Vij(1,1)) - pow( pow(Vij(0,0)+Vij(1,1),2) - 4*(Vij(0,0)*Vij(1,1)- pow(Vij(0,1), 2)) , 0.5))/2;
 
+	dE[1] = 0.5*(dVij(0,0) + dVij(1,1) + 0.5*(pow(pow(Vij(0,0)+Vij(1,1), 2) - 4*(Vij(0,0)*Vij(1,1)-pow(Vij(0,1),2)), -0.5))*( 2*(Vij(0,0)+Vij(1,1))*(dVij(0,0) + dVij(1,1)) - 4*(Vij(0,0)*dVij(1,1) + Vij(1,1)*dVij(0,0)) + 8*Vij(0,1)*dVij(0,1)));
+	 
+	dE[0] = 0.5*(dVij(0,0) + dVij(1,1) - 0.5*(pow(pow(Vij(0,0)+Vij(1,1), 2) - 4*(Vij(0,0)*Vij(1,1)-pow(Vij(0,1),2)), -0.5))*( 2*(Vij(0,0)+Vij(1,1))*(dVij(0,0) + dVij(1,1)) - 4*(Vij(0,0)*dVij(1,1) + Vij(1,1)*dVij(0,0)) + 8*Vij(0,1)*dVij(0,1)));
 }
 
-double FSSH::Velocity(){
-	initK = K;
-	Build();
-	StateE();
-	double Ea = E[state];
-	Build();
-	StateE();
-	double Eb = E[state];
-	cout << "Initial Energy is " << Ea << endl << "Final Energy is " << Eb <<endl;
-	force  = -(Eb - Ea)/0.1;
-	finalK = initK + force*dt;
-	cout << "Final momentum is = " << finalK << endl;
-	return finalK;
-}	
-
-double FSSH::Position(){
-	initX = x;
-	finalX = initX + initK*dt + 0.5*force*pow(dt,2);
-	cout << "New position is " << finalX <<endl;
-	return x;
-
+void FSSH::Velocity(){
+	K = K + dE[0]*dt;
+}
+void FSSH::Position(){
+	x = x + K*dt - 0.5*dE[0]*pow(dt,2);
 }
 
 //print matrix function
