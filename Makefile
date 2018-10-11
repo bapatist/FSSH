@@ -8,7 +8,7 @@ PROGRAM:=project1
 #
 SOURCES:= main.cc code.cc 
 OBJECTS:=$(addsuffix .o, $(basename $(SOURCES)))
-
+LOGFILE:= logfile.txt TotalE.txt
 all: $(PROGRAM)
 
 %.o: %.cc
@@ -18,5 +18,5 @@ $(PROGRAM): $(OBJECTS)
 	$(CXX) -o $@ $(OBJECTS)
 
 clean:
-	rm -f $(OBJECTS) $(PROGRAM)
+	rm -f $(OBJECTS) $(PROGRAM) $(LOGFILE)
 clear: clean
