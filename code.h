@@ -4,11 +4,12 @@
 #include <fstream>
 #include <cstdio>
 #include <cmath>
-using namespace std;
 #include <vector>
+#include <complex>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Eigenvalues>
 #include <eigen3/Eigen/Core>
+using namespace std;
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Matrix;
 
 class FSSH
@@ -19,6 +20,7 @@ class FSSH
 		double K; //momentum 
 		double F[2]; //Force
 		int state;
+		complex<double> c1, c2;
 		double t;
 		double dt=1;
 		double M=2000; //(mass of molecule in atomic units)
@@ -37,4 +39,5 @@ class FSSH
 	void Velocity();
 	double CouplingD();
 	void Position();
+	void Initializer();
 };

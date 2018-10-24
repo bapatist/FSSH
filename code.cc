@@ -3,10 +3,7 @@
 void print_mat(const Matrix& a);
 
 FSSH::FSSH(){
-       	x=-10.0;
-	state = 0;
-	K = 4.0;
-	t=0.0;
+	Initializer();
 	while(x>xmin and x<xmax){
 		Build();
 		StateE();
@@ -26,6 +23,16 @@ FSSH::FSSH(){
 		}	
 
 	
+}
+void FSSH::Initializer(){
+       	x=-10.0;
+	state = 0;
+	K = 4.0;
+	t=0.0;
+	c1 = {1,0}; 
+	c2 ={0,0};
+	c1.real() *= K; c1.imag() *= K;
+	cout << c1 << endl;
 }
 
 void FSSH::Build(){
