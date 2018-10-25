@@ -9,17 +9,24 @@ FSSH::FSSH(){
 		StateE();
 		Position();
 		Velocity();
+		//RK4();
 		x = xnew;
 		K = Knew;
+		
 		std::ofstream logfile(
 			"logfile.txt", std::ios_base::out | std::ios_base::app
 		);
 		std::ofstream TotalE(	
 			"TotalE.txt", std::ios_base::out | std::ios_base::app
 		);
-		t=t+dt;
+		//std::ofstream Cvals(
+		//	"Cvals.txt", std::ios_base::out | std::ios_base::app
+		//);
+		
 		logfile << std::setprecision(4) << std::fixed << t << '\t' << x << endl;
 		TotalE << std::setprecision(4) << std::fixed << t << '\t' << TE << endl;
+		//Cvals << std::setprecision(4) << std::fixed << c1 << '\t' << c2 << endl;
+		t=t+dt;
 		}	
 
 	
@@ -29,10 +36,17 @@ void FSSH::Initializer(){
 	state = 0;
 	K = 4.0;
 	t=0.0;
-	c1 = {1,0}; 
-	c2 ={0,0};
-	c1.real() *= K; c1.imag() *= K;
-	cout << c1 << endl;
+	C = Matrix(2,1);
+	C(0) = {1,1};
+	C(1) = {1,-1};
+	MatrixC D(2,1);
+	complex<double> i(0,1);
+	D = C*i;
+	cout << D << endl;
+}
+
+void FSSH::RK4(){
+	complex<double> k1, k2, k3, k4; 	
 }
 
 void FSSH::Build(){

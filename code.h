@@ -12,6 +12,8 @@
 using namespace std;
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Matrix;
 
+typedef Eigen::Matrix<complex<double>, Eigen::Dynamic, Eigen::Dynamic> MatrixC;
+
 class FSSH
 {
 	public:
@@ -30,6 +32,7 @@ class FSSH
 		
 		//Potential Energy, Wavefunction and Energies of States, dVij = derivative of Vij 
 		Matrix Vij, dVij;
+		MatrixC C;
 		double initE, finalE, force, Knew, xnew; 
 		double D12;
 		double TE, E[2], dE[2]; //Total Energy; Energy Array for 2 states; derivative of energy wrt x
@@ -38,6 +41,7 @@ class FSSH
 	void StateE();
 	void Velocity();
 	double CouplingD();
+	void RK4();
 	void Position();
 	void Initializer();
 };

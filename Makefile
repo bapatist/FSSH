@@ -8,7 +8,7 @@ PROGRAM:=project1
 #
 SOURCES:= main.cc code.cc 
 OBJECTS:=$(addsuffix .o, $(basename $(SOURCES)))
-LOGFILE:= logfile.txt TotalE.txt
+LOGFILE:= logfile.txt TotalE.txt Cvals.txt
 all: $(PROGRAM)
 
 %.o: %.cc
