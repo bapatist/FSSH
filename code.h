@@ -38,7 +38,7 @@ class FSSH
 		int Left2=0;
 		int Left1=0;
 		
-		double PR1, PR2;
+		double PR1, PR2, PL1, PL2;
 
 		//Potential Energy, Wavefunction and Energies of States, dVij = derivative of Vij 
 		Matrix Vij, dVij, Dij;

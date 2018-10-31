@@ -3,31 +3,31 @@
 void print_mat(const Matrix& a);
 
 FSSH::FSSH(){
-	//for(iK=5.0; iK<31.0; iK=iK+5){
+	for(iK=10.0; iK<31.0; iK=iK+5){
+		Right1 = Right2 = Left1 = Left2 = 0;
 		for(int traj=0; traj<2000; traj++){
 			Initializer();
 			while(x>xmin and x<xmax){
-				Build(); 	// Calculates Vij and dVij matrices
-				StateE();	// Calculates State energies and total energy using Vij
-				CouplingD();	// Calculates coupling vector Dij
-				//std::ofstream logfile(
-				//	"logfile.txt", std::ios_base::out | std::ios_base::app
-				//);
-				//std::ofstream TotalE(	
-				//	"TotalE.txt", std::ios_base::out | std::ios_base::app
-				//);
-				//std::ofstream State(
-				//	"State.txt", std::ios_base::out | std::ios_base::app
-				//);
-				//logfile << std::setprecision(4) << std::fixed << t << '\t' << x << endl;
-				//TotalE << std::setprecision(4) << std::fixed << t << '\t' << TE << endl;
-				//State << std::setprecision(4) << std::fixed << x << '\t' << state << endl;
+				Build();     // Calculates Vij and dVij matrices
+				StateE();    // Calculates State energies and total energy using Vij
+				CouplingD(); // Calculates coupling vector Dij
+//				std::ofstream logfile(
+//					"logfile.txt", std::ios_base::out | std::ios_base::app
+//				);
+//				std::ofstream TotalE(	
+//					"TotalE.txt", std::ios_base::out | std::ios_base::app
+//				);
+//				std::ofstream State(
+//					"State.txt", std::ios_base::out | std::ios_base::app
+//				);
+//				logfile << std::setprecision(4) << std::fixed << t << '\t' << x << endl;
+//				TotalE << std::setprecision(4) << std::fixed << t << '\t' << TE << endl;
+//				State << std::setprecision(4) << std::fixed << x << '\t' << state << endl;
 							
 				Hopping();  //Updates State
 				RK4();      //Updates C vector
 				Position(); //Updates x
 				Velocity(); //Updates K
-
 				C = Cnew;
 				x = xnew;
 				K = Knew;
@@ -38,11 +38,17 @@ FSSH::FSSH(){
 			if(x>0 and state==1) Right2 += 1;
 			if(x<0 and state==1) Left2 += 1;	
 		}
+	
 		PR1 = (double)Right1/2000.0;
 		PR2 = (double)Right2/2000.0;
-
+		PL1 = (double)Left1/2000.0;
+		cout << "For K=" << iK << endl;
+		cout << Right1 << endl << Right2 << endl << Left1 << endl << Left2 << endl;		
 		cout << PR1 << endl;
 		cout << PR2 << endl;
+		cout << PL1 << endl << endl;
+	}
+
 //		std::ofstream P1(
 //			"P1.txt", std::ios_base::out | std::ios_base::app
 //		);
@@ -56,7 +62,7 @@ FSSH::FSSH(){
 void FSSH::Initializer(){
 	x=-10.0;
 	state = 0;
-	K = 15.0;
+	K = iK;
 	t=0.0;
 	C = MatrixC (2,1);
 	C(0) = {1,0};
@@ -64,37 +70,40 @@ void FSSH::Initializer(){
 	srand(time(0));
 }
 void FSSH::Hopping(){
-	MatrixC A(2,2), B(2,2);
-	for(int l=0; l<2; l++){
-		for(int m=0; m<2; m++){
-			A(l,m) = C(l)*conj(C(m));
-			B(l,m) = (2/hbar)*(imag(conj(A(l,m))*Vij(l,m))) - 2*(real(conj(A(l,m))*x*Dij(l,m)));
-			//cout << A(l,m) << endl;
+	if(2*M*(E[state]-E[(state+1)%2]) + K*K > 0){
+		MatrixC A(2,2), B(2,2);
+		for(int l=0; l<2; l++){
+			for(int m=0; m<2; m++){
+				A(l,m) = C(l)*conj(C(m));
+				B(l,m) = (2/hbar)*(imag(conj(A(l,m))*Vij(l,m))) - 2*(real(conj(A(l,m))*x*Dij(l,m)));
+				//cout << A(l,m) << endl;
+			}
 		}
-	}
-	double rando = rand()/(double)RAND_MAX;
-	hopped = 0;
-	if(state==0){
-	//	cout << dt*B(1,0)/A(0,0) << endl;
-		if(real(dt*B(1,0)/A(0,0)) > rando){
-			statenew = 1;
-			hopped = 1;
+		double rando = rand()/(double)RAND_MAX;
+		hopped = 0;
+		if(state==0){
+		//	cout << dt*B(1,0)/A(0,0) << endl;
+			if(real(dt*B(1,0)/A(0,0)) > rando){
+				statenew = 1;
+				hopped = 1;
+			}
 		}
-	}
-	if(state==1){
-		if(real(dt*B(0,1)/A(1,1)) > rando){
-			statenew = 0;
-			hopped = 1;
+		if(state==1){
+			if(real(dt*B(0,1)/A(1,1)) > rando){
+				statenew = 0;
+				hopped = 1;
+			}
 		}
-	}
-	if(hopped){
-		K = pow((2*M*(E[state]-E[statenew]) + K*K),0.5);
-		state = statenew;
+		if(hopped){
+			K = pow((2*M*(E[state]-E[statenew]) + K*K),0.5);
+			state = statenew;
+		}
 	}
 }
 
 
 void FSSH::RK4(){
+	MatrixC A(2,2), B(2,2);
 	MatrixC k1(2,1), k2(2,1), k3(2,1), k4(2,1);
 	MatrixC Mmat(2,2);
 	complex<double> iota = {0,1};
@@ -103,8 +112,7 @@ void FSSH::RK4(){
 	k2 = dt*Mmat*(C+0.5*k1);
 	k3 = dt*Mmat*(C+0.5*k2);
 	k4 = dt*Mmat*(C+k3);
-
-	Cnew = C + (k1 + 2*k2 + 2*k3 + k4)/6;		
+	Cnew = C + (k1 + 2*k2 + 2*k3 + k4)/6;	
 }
 
 void FSSH::Build(){
