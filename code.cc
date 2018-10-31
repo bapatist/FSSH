@@ -3,50 +3,108 @@
 void print_mat(const Matrix& a);
 
 FSSH::FSSH(){
-	Initializer();
-	while(x>xmin and x<xmax){
-		Build();
-		StateE();
-		Position();
-		Velocity();
-		//RK4();
-		x = xnew;
-		K = Knew;
-		
-		std::ofstream logfile(
-			"logfile.txt", std::ios_base::out | std::ios_base::app
-		);
-		std::ofstream TotalE(	
-			"TotalE.txt", std::ios_base::out | std::ios_base::app
-		);
-		//std::ofstream Cvals(
-		//	"Cvals.txt", std::ios_base::out | std::ios_base::app
-		//);
-		
-		logfile << std::setprecision(4) << std::fixed << t << '\t' << x << endl;
-		TotalE << std::setprecision(4) << std::fixed << t << '\t' << TE << endl;
-		//Cvals << std::setprecision(4) << std::fixed << c1 << '\t' << c2 << endl;
-		t=t+dt;
-		}	
+	//for(iK=5.0; iK<31.0; iK=iK+5){
+		for(int traj=0; traj<2000; traj++){
+			Initializer();
+			while(x>xmin and x<xmax){
+				Build(); 	// Calculates Vij and dVij matrices
+				StateE();	// Calculates State energies and total energy using Vij
+				CouplingD();	// Calculates coupling vector Dij
+				//std::ofstream logfile(
+				//	"logfile.txt", std::ios_base::out | std::ios_base::app
+				//);
+				//std::ofstream TotalE(	
+				//	"TotalE.txt", std::ios_base::out | std::ios_base::app
+				//);
+				//std::ofstream State(
+				//	"State.txt", std::ios_base::out | std::ios_base::app
+				//);
+				//logfile << std::setprecision(4) << std::fixed << t << '\t' << x << endl;
+				//TotalE << std::setprecision(4) << std::fixed << t << '\t' << TE << endl;
+				//State << std::setprecision(4) << std::fixed << x << '\t' << state << endl;
+							
+				Hopping();  //Updates State
+				RK4();      //Updates C vector
+				Position(); //Updates x
+				Velocity(); //Updates K
 
-	
+				C = Cnew;
+				x = xnew;
+				K = Knew;
+				t=t+dt;
+				}
+			if(x>0 and state==0) Right1 += 1;
+			if(x<0 and state==0) Left1 += 1;
+			if(x>0 and state==1) Right2 += 1;
+			if(x<0 and state==1) Left2 += 1;	
+		}
+		PR1 = (double)Right1/2000.0;
+		PR2 = (double)Right2/2000.0;
+
+		cout << PR1 << endl;
+		cout << PR2 << endl;
+//		std::ofstream P1(
+//			"P1.txt", std::ios_base::out | std::ios_base::app
+//		);
+//		P1 << std::setprecision(4) << std::fixed << K << '\t' << PR1 << endl;
+//		std::ofstream P2(
+//			"P2.txt", std::ios_base::out | std::ios_base::app
+//		);
+//		P2 << std::setprecision(4) << std::fixed << K << '\t' << PR2 << endl;
+	//}	
 }
 void FSSH::Initializer(){
-       	x=-10.0;
+	x=-10.0;
 	state = 0;
-	K = 4.0;
+	K = 15.0;
 	t=0.0;
-	C = Matrix(2,1);
-	C(0) = {1,1};
-	C(1) = {1,-1};
-	MatrixC D(2,1);
-	complex<double> i(0,1);
-	D = C*i;
-	cout << D << endl;
+	C = MatrixC (2,1);
+	C(0) = {1,0};
+	C(1) = {0,0};
+	srand(time(0));
+}
+void FSSH::Hopping(){
+	MatrixC A(2,2), B(2,2);
+	for(int l=0; l<2; l++){
+		for(int m=0; m<2; m++){
+			A(l,m) = C(l)*conj(C(m));
+			B(l,m) = (2/hbar)*(imag(conj(A(l,m))*Vij(l,m))) - 2*(real(conj(A(l,m))*x*Dij(l,m)));
+			//cout << A(l,m) << endl;
+		}
+	}
+	double rando = rand()/(double)RAND_MAX;
+	hopped = 0;
+	if(state==0){
+	//	cout << dt*B(1,0)/A(0,0) << endl;
+		if(real(dt*B(1,0)/A(0,0)) > rando){
+			statenew = 1;
+			hopped = 1;
+		}
+	}
+	if(state==1){
+		if(real(dt*B(0,1)/A(1,1)) > rando){
+			statenew = 0;
+			hopped = 1;
+		}
+	}
+	if(hopped){
+		K = pow((2*M*(E[state]-E[statenew]) + K*K),0.5);
+		state = statenew;
+	}
 }
 
+
 void FSSH::RK4(){
-	complex<double> k1, k2, k3, k4; 	
+	MatrixC k1(2,1), k2(2,1), k3(2,1), k4(2,1);
+	MatrixC Mmat(2,2);
+	complex<double> iota = {0,1};
+	Mmat = -((iota*(Vij.cast<std::complex<double>>()))/hbar) - ((K/M)*(Dij.cast<std::complex<double>>()));
+	k1 = dt*Mmat*C;
+	k2 = dt*Mmat*(C+0.5*k1);
+	k3 = dt*Mmat*(C+0.5*k2);
+	k4 = dt*Mmat*(C+k3);
+
+	Cnew = C + (k1 + 2*k2 + 2*k3 + k4)/6;		
 }
 
 void FSSH::Build(){
@@ -65,37 +123,15 @@ void FSSH::Build(){
 
 }
 
-double FSSH::CouplingD(){
-
-	//Failed attempt to calculate coupling vector 
-	
-////////Eigen::SelfAdjointEigenSolver<Matrix> solver(Vij);
-////////WF = Matrix(2,2);
-////////WF = solver.eigenvectors();
-////////E = Matrix(2,1);
-////////E = solver.eigenvalues();
-////////
-////////phi1 = Matrix(2,1);
-////////phi2 = Matrix(2,1);
-////////for(int i=0; i<2; i++){
-////////       phi1(i,0) = WF(i,0);
-////////       phi2(i,0) = WF(i,1);
-////////}
-//////////print_mat(WF);
-//////////print_mat(phi1);
-//////////print_mat(phi2);
-	//print_mat(dVij);
-//	D12 = Matrix(1,1);
-//	double deltaE = E(0) - E(1);
-//	D12 = -1 * phi1.transpose() * dVij * phi2 / deltaE;
-	//cout << deltaE << endl;
-	//cout << endl << "For x=" << x << "  D12 is = " << D12 << endl;
-
-	//CHECKING WITH PRASHANT'S EXPRESSION
-
-	double n = (Vij(0,0) - Vij(1,1)) / 2*Vij(0,1);
+void FSSH::CouplingD(){
+	double n = (Vij(0,0) - Vij(1,1)) / (2*Vij(0,1));
 	double D12 = (1/(4*(Vij(0,1)*Vij(0,1))*(1+n*n))) * ((Vij(0,1)*(dVij(0,0)-dVij(1,1))) - (dVij(0,1)*(Vij(0,0)-Vij(1,1))));
-	return D12; 
+
+	Dij = Matrix(2,2);
+	Dij(0,0) = 0; 
+	Dij(0,1) = D12; 
+	Dij(1,0) = -D12; 
+	Dij(1,1) = 0;
 }
 
 void FSSH::StateE(){
@@ -110,14 +146,14 @@ void FSSH::StateE(){
 	F[0] = -dE[0];
 	F[1] = -dE[1];
 	
-	TE = K*K/(2*M) + E[0];
+	TE = K*K/(2*M) + E[state];
 }
 
 void FSSH::Velocity(){
-	Knew = K + F[0]*dt;
+	Knew = K + F[state]*dt;
 }
 void FSSH::Position(){
-	xnew = x + (K*dt + 0.5*F[0]*pow(dt,2))/M;
+	xnew = x + (K*dt + 0.5*F[state]*pow(dt,2))/M;
 }
 
 //print matrix function

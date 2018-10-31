@@ -1,3 +1,4 @@
+#include <ctime>
 #include <string>
 #include <iostream>
 #include <iomanip>
@@ -12,7 +13,7 @@
 using namespace std;
 typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> Matrix;
 
-typedef Eigen::Matrix<complex<double>, Eigen::Dynamic, Eigen::Dynamic> MatrixC;
+typedef Eigen::Matrix<complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> MatrixC;
 
 class FSSH
 {
@@ -22,26 +23,37 @@ class FSSH
 		double K; //momentum 
 		double F[2]; //Force
 		int state;
-		complex<double> c1, c2;
 		double t;
-		double dt=1;
-		double M=2000; //(mass of molecule in atomic units)
+		bool hopped;
+		const double dt=1;
+		const double M=2000; //(mass of molecule in atomic units)i
+		const double hbar=1.0; 
 
 		//boundary variables
-		double xmax=10.1, xmin=-10.1; //boundaries of x
+		double xmax=10.01, xmin=-10.01; //boundaries of x
 		
+		double iK;
+		int Right2=0;
+		int Right1=0;
+		int Left2=0;
+		int Left1=0;
+		
+		double PR1, PR2;
+
 		//Potential Energy, Wavefunction and Energies of States, dVij = derivative of Vij 
-		Matrix Vij, dVij;
-		MatrixC C;
-		double initE, finalE, force, Knew, xnew; 
+		Matrix Vij, dVij, Dij;
+		MatrixC C, Cnew, A, B;
+		double initE, finalE, force, Knew, xnew;
+	       	int statenew;	
 		double D12;
 		double TE, E[2], dE[2]; //Total Energy; Energy Array for 2 states; derivative of energy wrt x
 	FSSH();	
 	void Build();
 	void StateE();
 	void Velocity();
-	double CouplingD();
+	void CouplingD();
 	void RK4();
 	void Position();
 	void Initializer();
+	void Hopping();
 };
